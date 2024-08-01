@@ -83,7 +83,7 @@ def batch_delta_knn_graph_gpu(embeddings, k1, k2, batch_size=1024, device="cpu")
     return graph_nk
 
 
-def sac(embeddings, neighbor_mode, m, batch_size=1024, maxIter=10, device="cpu"):
+def sac(embeddings, m, batch_size=1024, maxIter=10, neighbor_mode="queue", device="cpu"):
     embeddings = torch.FloatTensor(embeddings).to(device)
     embeddings = F.normalize(embeddings, dim=1, p=2)
     n, d = embeddings.shape
@@ -95,7 +95,7 @@ def sac(embeddings, neighbor_mode, m, batch_size=1024, maxIter=10, device="cpu")
     k0 = np.ceil(sigma0 * m / n)
     graph0_nk = batch_knn_graph_gpu(embeddings, k0, batch_size, device)
     algo = nk.community.PLM(graph0_nk, refine=True, turbo=True, nm=neighbor_mode, par="balanced", maxIter=32)
-    zeta0 = nk.community.detectCommunities(graph0_nk, algo=algo)
+    zeta0 = nk.community.detectCommunities(graph0_nk, algo=algo, inspect=False)
     coarsened_graph0_nk, fine_to_coarsen0 = algo.coarsen(graph0_nk, zeta0)
 
     #### Progressive Graph Construction
@@ -121,14 +121,14 @@ def sac(embeddings, neighbor_mode, m, batch_size=1024, maxIter=10, device="cpu")
             print(f"Accept {d_idx+1}th graph, sigma= {sigma}")
 
     algo_final = nk.community.PLM(coarsened_graph0_nk, refine=True, turbo=True, nm=neighbor_mode, par="balanced", maxIter=32)
-    coarsen_zeta = nk.community.detectCommunities(coarsened_graph0_nk, algo=algo_final)
+    coarsen_zeta = nk.community.detectCommunities(coarsened_graph0_nk, algo=algo_final, inspect=False)
     zeta = algo_final.prolong(coarsened_graph0_nk, coarsen_zeta, graph0_nk, fine_to_coarsen0)
     preds = zeta.getVector()
 
     return preds
 
 
-def sac_wo_hierarchy(embeddings, neighbor_mode, m, batch_size=1024, maxIter=10, device="cpu", return_graph=False):
+def sac_wo_hierarchy(embeddings, m, batch_size=1024, maxIter=10, neighbor_mode="queue", device="cpu", return_graph=False):
     ### m = 2 * #Undirected Edges in attributed graph
     embeddings = torch.FloatTensor(embeddings).to(device)
     embeddings = F.normalize(embeddings, dim=1, p=2)
@@ -142,7 +142,7 @@ def sac_wo_hierarchy(embeddings, neighbor_mode, m, batch_size=1024, maxIter=10, 
     graph0_nk = batch_knn_graph_gpu(embeddings, k0, batch_size, device)
 
     algo = nk.community.PLM(graph0_nk, refine=True, turbo=True, nm=neighbor_mode, par="balanced", maxIter=32)
-    zeta0 = nk.community.detectCommunities(graph0_nk, algo=algo)
+    zeta0 = nk.community.detectCommunities(graph0_nk, algo=algo, inspect=False)
 
 
     #### Progressive Graph Construction
@@ -167,7 +167,7 @@ def sac_wo_hierarchy(embeddings, neighbor_mode, m, batch_size=1024, maxIter=10, 
             print(f"Accept {d_idx+1}th graph, sigma= {sigma}")
 
     algo_final = nk.community.PLM(graph0_nk, refine=True, turbo=True, nm=neighbor_mode, par="balanced", maxIter=32)
-    zeta = nk.community.detectCommunities(graph0_nk, algo=algo_final)
+    zeta = nk.community.detectCommunities(graph0_nk, algo=algo_final, inspect=False)
     preds = np.array(zeta.getVector())
 
     if return_graph:
