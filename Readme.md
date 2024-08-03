@@ -1,5 +1,7 @@
 # Progressive Non-Parametric Node Clustering
 
+This is a Python interface for SAC. The core algorithms of SAC are implemented in [https://github.com/yliuhz/networkit](https://github.com/yliuhz/networkit). 
+
 
 ## Installation
 
