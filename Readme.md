@@ -1,7 +1,5 @@
 # Progressive Non-Parametric Node Clustering
 
-[Yue Liu](https://yliuhz.github.io/), [Zhongying Ru](https://www.linkedin.com/in/%E9%92%9F%E8%8E%B9-%E8%8C%B9-8b4732187/?locale=cs_CZ), Boyu Ruan
-
 
 ## Installation
 
